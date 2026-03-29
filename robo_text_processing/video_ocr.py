@@ -76,7 +76,6 @@ if __name__ == "__main__":
             f.write(f"[{count}]\n")
             for line in cur_frame_ocr_results:
                 f.write(line + "\n")
-            f.write("\n")
 
         success, image = vidcap.read()
         pbar.update(1)
