@@ -2,6 +2,7 @@ import os
 import cv2
 import argparse
 from parse import *
+import tqdm
 
 # Task: Using the output of video_ocr, crop the text regions from the video frames and save them as images.
 # There should be one folder for each word that appears in consecutive frames, named {word}_{index}, where index is 
@@ -55,6 +56,7 @@ def clip_text_roi(video_path, video_ocr_results_txt, word_list_csv, output_folde
 
     video_frame_width = int(vidcap.get(cv2.CAP_PROP_FRAME_WIDTH))
     video_frame_height = int(vidcap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    video_frame_count = int(vidcap.get(cv2.CAP_PROP_FRAME_COUNT))
 
     # read the word list from the csv file
     word_list = []
@@ -77,6 +79,9 @@ def clip_text_roi(video_path, video_ocr_results_txt, word_list_csv, output_folde
     cur_frame_num = 0
     cur_video_image = None
     with open(video_ocr_results_txt, "r") as f:
+        pbar = tqdm.tqdm()
+        pbar.set_description("Cropping text regions")
+        pbar.reset(total=video_frame_count)
         cur_line = f.readline()
         while cur_line:
             if cur_line.strip():
@@ -97,6 +102,7 @@ def clip_text_roi(video_path, video_ocr_results_txt, word_list_csv, output_folde
                     print(f"Warning: Frame number in OCR results ({cur_frame_num}) does not match the current frame number in video ({frame_num_in_video}). Seeking to the correct frame.")
                     vidcap.set(cv2.CAP_PROP_POS_FRAMES, cur_frame_num)
                 success, cur_video_image = vidcap.read()
+                pbar.update(1)
                 if not success:
                     print("Error: Could not read the video file. Please check the path and try again.")
                     exit(1)
@@ -146,6 +152,7 @@ def clip_text_roi(video_path, video_ocr_results_txt, word_list_csv, output_folde
                 # this is a word we are not tracking, ignore it
                 pass
             cur_line = f.readline()
+        pbar.close()
     
     # release the video capture object
     vidcap.release()
